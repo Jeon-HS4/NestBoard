@@ -1,42 +1,44 @@
-import { Controller, Get, Post, Body, Param, Delete, Patch, UsePipes, ValidationPipe } from '@nestjs/common';
-import { Board, BoardStatus } from './board.model';
+import { Controller, Get, Post, Body, Param, Delete, Patch, UsePipes, ValidationPipe, ParseIntPipe } from '@nestjs/common';
+import { BoardStatus } from './board-status.enum';
 import { BoardService } from './board.service';
 import { CreateBoardDto } from './dto/create-board.dto';
 import { BoardStatusValidationPipe } from './pipes/board-status-validation.pipe';
+import { Board } from './board.entity';
 
 @Controller('board')
 export class BoardController {
     constructor(private boardService: BoardService){}
 
 
-    @Get('/')
-    getAllBoard(): Board[] {
+    @Post()
+    @UsePipes(ValidationPipe)
+    createBoard(@Body() CreateBoardDto: CreateBoardDto): Promise<Board>{
+        return this.boardService.createBoard(CreateBoardDto);
+    }
+
+
+    @Get()
+    getAllBoards(): Promise<Board[]>{
         return this.boardService.getAllBoard();
     }
 
-    @Post()
-    @UsePipes(ValidationPipe)
-    createBoard(
-        @Body() createBoardDto: CreateBoardDto
-    ): Board {
-        return this.boardService.createBoard(createBoardDto);
-    }
-
     @Get('/:id')
-    getBoardById(@Param('id') id: String): Board{
-
+    getBoardById(@Param('id') id: number): Promise<Board>{
         return this.boardService.getBoardById(id);
     }
 
     @Delete('/:id')
-    deleteBoard(@Param('id') id: String): void{
-        this.boardService.deleteBoard(id);
+    deleteBoard(@Param('id', ParseIntPipe) id): Promise<void>{
+        return this.boardService.deleteBoard(id);
     }
 
     @Patch('/:id/status')
-    updateBoard(
-        @Param('id') id: String,
-        @Body('status', BoardStatusValidationPipe) status: BoardStatus): Board{
+    updateBoardStatus(
+        @Param('id', ParseIntPipe) id: number,
+        @Body('status', BoardStatusValidationPipe) status: BoardStatus
+    ){
         return this.boardService.updateBoardStatus(id, status);
     }
+
+
 }
